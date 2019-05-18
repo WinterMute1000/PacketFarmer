@@ -48,9 +48,20 @@ namespace PacketFarmer
 			{
 				if ((capturePacket = PacketCaptureDevice.GetNextPacket()) != null)
 				{
-					Packet packet = (Packet)PacketDotNet.TcpPacket.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
-					TranslationPacketHeader(packet, ref returnString);
-				}
+					TcpPacket packet = (TcpPacket)PacketDotNet.TcpPacket.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
+
+					returnString += "Source Port:"+packet.SourcePort.ToString()+" ";
+					returnString += "DestinationPort:" + packet.DestinationPort.ToString() + "\n";
+					returnString += "SequenceNumber:" + packet.SequenceNumber.ToString() + "\n";
+					returnString += "AcknowledgmentNumber:" + packet.AcknowledgmentNumber.ToString() + "\n";
+					returnString +="DataOffset:" + packet.DataOffset.ToString()+" ";
+					returnString += "Flag:" + packet.AllFlags.ToString() + " ";
+					returnString += "Window Size:" + packet.WindowSize.ToString() + "\n";
+					returnString += "Checksum:" + packet.Checksum.ToString() + " ";
+					returnString += "Urgent Pointer:" + packet.UrgentPointer.ToString() + "\n";
+
+					returnString += "Data" + packet.PayloadData.ToString() + "\n";
+ 				}
 				else
 					throw new Exception();
 
@@ -62,12 +73,6 @@ namespace PacketFarmer
 				returnString = "Can't Not Captured Next Packet.\n";
 				return returnString;
 			}
-		}
-	    private void TranslationPacketHeader(Packet packet,ref string returnString) //Translation packet header to string
-		{
-			TcpPacket tcpPacket = (TcpPacket)packet;
-
-			//Do next time.
 		}
 	}
 }
