@@ -12,18 +12,34 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using PacketDotNet;
+using SharpPcap;
+using SharpPcap.LibPcap;
+using SharpPcap.AirPcap;
+using SharpPcap.WinPcap;
 
 namespace PacketFarmer
 {
 	public partial class MainWindow : Window
 	{
+		UIManager um;
+		ProcessingManeger pm;
 		public MainWindow()
 		{
+			UIManager um = new UIManager();
+			ProcessingManeger pm = new ProcessingManeger(um);
+
+			um.RefProcessingManeger = pm;
 			InitializeComponent();
 		}
 
 		private void comboBox_Load(object sender, RoutedEventArgs e) //Load Interface 
 		{
+			CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
+			pm.CapInstancce = captureDevices;
+
+			foreach (ICaptureDevice dev in captureDevices)
+				select_interface_combo.Items.Add(dev.Name);
 		}
 		private void menuSaveClick(object sender, RoutedEventArgs e) //Save Packet Capturd Data
 		{
