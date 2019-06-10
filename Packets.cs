@@ -35,9 +35,8 @@ namespace PacketFarmer
 	class TCPPacketInterface : PacketInterface
 	{
 		public TCPPacketInterface() { }
-		public TCPPacketInterface(ICaptureDevice captureDevice)
-		{
-		}
+		public TCPPacketInterface(ICaptureDevice captureDevice) :base(captureDevice)
+		{ }
 		public override string PacketCapture(ref bool successFlag) //Packet capture and return to string (async)
 		{
 			RawCapture capturePacket;
@@ -61,6 +60,7 @@ namespace PacketFarmer
 					returnString += "Urgent Pointer:" + packet.UrgentPointer.ToString() + "\n";
 
 					returnString += "Data" + packet.PayloadData.ToString() + "\n";
+					successFlag = true; ;
  				}
 				else
 					throw new Exception();
@@ -69,7 +69,7 @@ namespace PacketFarmer
 			}
 			catch (Exception e)
 			{
-				successFlag = true;
+				successFlag = false;
 				returnString = "Can't Not Captured Next Packet.\n";
 				return returnString;
 			}
