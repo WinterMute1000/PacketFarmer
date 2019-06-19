@@ -43,7 +43,11 @@
 				 PreviewKeyDown="editPreviewKeyDown"/>
 		<!--Only Input Number-->
 		<Button Name="confirm_number" Grid.Row="3" Grid.Column="2" Width="100" Click="changePacketCaptureNum">Confirm</Button>
-		<ScrollViewer Name="show_packet" Grid.Row="4" Grid.ColumnSpan="4" 
-					  VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Auto" />
+		<ScrollViewer Grid.Row="4" Grid.ColumnSpan="4" 
+					  VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Auto" >
+			<StackPanel>
+				<TextBlock Name="show_packet" Width="Auto" Height="Auto" TextAlignment="Left" FontSize="10" />
+			</StackPanel>
+		</ScrollViewer>
 	</Grid>
 </Window>

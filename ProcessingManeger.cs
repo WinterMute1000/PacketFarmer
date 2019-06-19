@@ -28,6 +28,7 @@ namespace PacketFarmer
 		public int PacketCaptureNum
 		{
 			set { packetCaptureNum = value; }
+			get { return packetCaptureNum; }
 		}
 
 		public PacketInterface PacketInterface

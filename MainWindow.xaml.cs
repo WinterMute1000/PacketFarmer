@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,7 @@ using SharpPcap;
 using SharpPcap.LibPcap;
 using SharpPcap.AirPcap;
 using SharpPcap.WinPcap;
+using Microsoft.Win32;
 
 namespace PacketFarmer
 {
@@ -25,12 +27,15 @@ namespace PacketFarmer
 		ProcessingManeger pm;
 		CaptureDeviceList captureDevices;
 		String selectedInterface = "";
+		String nowProtocol = "";// Using save
 
 		public MainWindow()
 		{
 			InitializeComponent();
 			ProcessingManeger pm = new ProcessingManeger();
-
+			nowProtocol = "TCP";
+			pm.PacketInterface = new TCPPacketInterface();
+			
 		}
 
 		private void comboBoxLoad(object sender, RoutedEventArgs e) //Load Interface 
@@ -56,12 +61,20 @@ namespace PacketFarmer
 		}
 		private void menuSaveClick(object sender, RoutedEventArgs e) //Save Packet Capturd Data
 		{
-			//Do Save
+			SaveFileDialog saveFileDialog = new SaveFileDialog();
+			saveFileDialog.Filter= "Text file(*.txt) | *.txt";
+			saveFileDialog.FileName= DateTime.Now.ToString("yyyy-MM-dd-HH-mm")+"-"+nowProtocol+"-"
+				+pm.PacketCaptureNum+" packet captured";
+
+			if (saveFileDialog.ShowDialog() == true)
+				File.WriteAllText(saveFileDialog.FileName, show_packet.Text);
+
 		}
 
 		private void TCPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
 		{
 			pm.PacketInterface = new TCPPacketInterface();
+			nowProtocol = "TCP";
 		}
 		private void menuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
 		{
