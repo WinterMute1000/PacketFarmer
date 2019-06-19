@@ -21,21 +21,28 @@
 			<ColumnDefinition Width="25*"/>
 		</Grid.ColumnDefinitions>
 		<Menu Grid.Row="0" Grid.ColumnSpan="4">
+			<MenuItem Header="Start" Click="menuStartClick"/>
 			<MenuItem Header="Save" Click="menuSaveClick"/>
-			<MenuItem Header="SelectProtocol" Click="menuSelectClick"/> <!--When Program Start, Add SubMenu(Protocol)-->
+			<MenuItem Header="SelectProtocol">
+				<MenuItem Header="TCP" Click="TCPSelected"/>
+			</MenuItem>
+			<!--When Program Start, Add SubMenu(Protocol)-->
 			<MenuItem Header="Stop" Click="menuStopClick"/>
 		</Menu>
 		<TextBlock Text="Select Interface" FontSize="25" Grid.Row="1" Grid.Column="0"
 				   HorizontalAlignment="Center" VerticalAlignment="Center"/>
 		<ComboBox Name="select_interface_combo" Grid.Row="2" Grid.ColumnSpan="3"
 				  IsEditable="False"
-				  Loaded="comboBox_Load"
-				  SelectionChanged="changeInterface"/> <!--ItemSource Setting Interface-->
+				  Loaded="comboBoxLoad"
+				  SelectionChanged="changeInterface"/>
+		<!--ItemSource Setting Interface-->
 		<Button Name="confirm_change" Grid.Row="2" Grid.Column="3" Width="100" Click="cofirmInterface">Confirm</Button>
 		<TextBlock Grid.Row="3" Grid.Column="0" 
 				   Text="Please input packet capture number" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
-		<TextBox Name="packet_num_edit" Grid.Row="3" Grid.Column="1"/> <!--Only Input Number-->
-		<Button Name="confirm_number" Grid.Row="3" Grid.Column="2" Width="100" Click="changePacketNum">Confirm</Button>
+		<TextBox Name="packet_num_edit" Grid.Row="3" Grid.Column="1" Loaded="numEditLoad"
+				 PreviewKeyDown="editPreviewKeyDown"/>
+		<!--Only Input Number-->
+		<Button Name="confirm_number" Grid.Row="3" Grid.Column="2" Width="100" Click="changePacketCaptureNum">Confirm</Button>
 		<ScrollViewer Name="show_packet" Grid.Row="4" Grid.ColumnSpan="4" 
 					  VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Auto" />
 	</Grid>

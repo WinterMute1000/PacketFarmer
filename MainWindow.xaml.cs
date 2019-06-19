@@ -22,51 +22,96 @@ namespace PacketFarmer
 {
 	public partial class MainWindow : Window
 	{
-		UIManager um;
 		ProcessingManeger pm;
+		CaptureDeviceList captureDevices;
+		String selectedInterface = "";
+
 		public MainWindow()
 		{
-			UIManager um = new UIManager();
-			ProcessingManeger pm = new ProcessingManeger(um);
-
-			um.RefProcessingManeger = pm;
 			InitializeComponent();
+			ProcessingManeger pm = new ProcessingManeger();
+
 		}
 
-		private void comboBox_Load(object sender, RoutedEventArgs e) //Load Interface 
+		private void comboBoxLoad(object sender, RoutedEventArgs e) //Load Interface 
 		{
-			CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
-			pm.CapInstancce = captureDevices;
+			captureDevices = CaptureDeviceList.Instance;
+
+			if (captureDevices.Count < 1)
+			{
+				MessageBox.Show("No devices were found on this machine", "Warining", MessageBoxButton.OK);
+				return;
+			}
 
 			foreach (ICaptureDevice dev in captureDevices)
 				select_interface_combo.Items.Add(dev.Name);
+
+			selectedInterface = select_interface_combo.Items.GetItemAt(0).ToString();
+			pm.NowCatchingDevice = captureDevices.ElementAt(0);
+		}
+		private void menuStartClick(object sender, RoutedEventArgs e)
+		{
+			pm.openInterface();
+			pm.startCapturePacket();
 		}
 		private void menuSaveClick(object sender, RoutedEventArgs e) //Save Packet Capturd Data
 		{
+			//Do Save
 		}
 
-		private void menuSelectClick(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
+		private void TCPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
 		{
-
+			pm.PacketInterface = new TCPPacketInterface();
 		}
-		private void menuStopClick (object sender, RoutedEventArgs e) //Stop Packet Capturing
+		private void menuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
 		{
-
+			pm.captureStop();
 		}
 
 		private void changeInterface(object sender, SelectionChangedEventArgs e) //OnSelectionChanged
 		{
-
+			if (select_interface_combo.SelectedIndex >= 0)
+			{
+				selectedInterface = select_interface_combo.SelectedItem.ToString();
+			}
+			else
+				MessageBox.Show("Wrong select.", "Warining", MessageBoxButton.OK);
 		}
-
 		private void cofirmInterface(object sender, RoutedEventArgs e) //Click Change Button
 		{
-
+			foreach (ICaptureDevice dev in captureDevices)
+			{
+				if (dev.Name == selectedInterface)
+					pm.NowCatchingDevice = dev;
+			}
 		}
 
-		private void changePacketNum(object sender, RoutedEventArgs e) //Click Num Button
+		private void numEditLoad(object sender, RoutedEventArgs e)
 		{
-
+			packet_num_edit.Text = ProcessingManeger.START_PACKET_NUM.ToString();
 		}
+		private void changePacketCaptureNum(object sender, RoutedEventArgs e) //Click Num Button
+		{
+			int textNum = int.Parse(packet_num_edit.Text.ToString());
+
+			if (textNum < 0 || textNum > 1024)
+			{
+				MessageBox.Show("Capture Length(1~1024)", "Warining", MessageBoxButton.OK);
+				return;
+			}
+
+			pm.PacketCaptureNum = textNum;
+		}
+
+		private void editPreviewKeyDown(object sender, KeyEventArgs e)
+		{
+			if (!(((Key.D0 <= e.Key) && (e.Key <= Key.D9))
+				|| ((Key.NumPad0 <= e.Key) && (e.Key <= Key.NumPad9))
+				|| e.Key == Key.Back))
+			{
+				e.Handled = true;
+			}
+		}
+
 	}
 }

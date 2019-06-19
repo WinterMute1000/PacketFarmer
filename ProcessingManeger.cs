@@ -17,37 +17,38 @@ namespace PacketFarmer
 		public static readonly int START_PACKET_NUM=5;
 		public static readonly int DEFAULT_TIMEOUT = 1000;
 		private int packetCaptureNum;
-		private CaptureDeviceList capInstance;
 		private ICaptureDevice nowCatchingDevice;
 		private PacketInterface packetInterface;
 
-		public CaptureDeviceList CapInstancce
+		public ICaptureDevice NowCatchingDevice
 		{
-			set { capInstance = value; }
+			set { nowCatchingDevice = value; }
 		}
-		private UIManager refUIManager;
-		public UIManager RefUIManager
+
+		public int PacketCaptureNum
 		{
-			set { refUIManager = value; }
+			set { packetCaptureNum = value; }
+		}
+
+		public PacketInterface PacketInterface
+		{
+			set { packetInterface = value; }
 		}
 		public ProcessingManeger()
 		{
 			packetCaptureNum = START_PACKET_NUM;
 		}
-		public ProcessingManeger(UIManager refUI) :this()
-		{
-			RefUIManager = refUI;
-		}
 		public void pcapError() //Error Handling
 		{
 
 		}
-		public void FindInterface() { } //Interface select
 
-		public void openInterface() //Open Interface;
+		public void openInterface() //Open Interface
 		{
 			packetInterface.openDevice(DEFAULT_TIMEOUT);
 		}
+
+		public void captureStop(){} //Capture Stop
 
 		public void startCapturePacket()
 		{

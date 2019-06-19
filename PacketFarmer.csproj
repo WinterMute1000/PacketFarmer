@@ -63,7 +63,6 @@
     </ApplicationDefinition>
     <Compile Include="Packets.cs" />
     <Compile Include="ProcessingManeger.cs" />
-    <Compile Include="UIManager.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
