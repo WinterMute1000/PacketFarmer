@@ -15,6 +15,9 @@ namespace PacketFarmer
 {
 	class ProcessingManeger
 	{
+		public delegate void captureEnd(String captured);
+		public static event captureEnd captureEndHandler;
+
 		public static readonly int START_PACKET_NUM=5;
 		public static readonly int DEFAULT_TIMEOUT = 1000;
 		private int packetCaptureNum;
@@ -86,6 +89,11 @@ namespace PacketFarmer
 			}
 		}
 
+		private void sendPacketData()
+		{
+			if (captureEndHandler != null)
+				captureEndHandler(resultData);
+		}
 		private void capturePacket()
 		{
 			bool successFlag = false;

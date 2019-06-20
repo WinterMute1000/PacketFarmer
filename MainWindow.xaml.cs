@@ -34,6 +34,7 @@ namespace PacketFarmer
 		{
 			nowProtocol = "TCP";
 			pm.PacketInterface = new TCPPacketInterface();
+			ProcessingManeger.captureEndHandler += this.setTextBlock;
 			InitializeComponent();
 		}
 
@@ -129,6 +130,11 @@ namespace PacketFarmer
 			{
 				e.Handled = true;
 			}
+		}
+
+		public void setTextBlock(String captureData)
+		{
+			show_packet.Text = captureData;
 		}
 
 	}
