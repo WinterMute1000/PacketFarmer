@@ -9,14 +9,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PacketFarmer
+namespace PacketFarmer //Make Packetcapture function event
 {
 	abstract class PacketInterface
 	{
 		private ICaptureDevice packetCaptureDevice;
+		private bool isDeviceOpend;
 		public ICaptureDevice PacketCaptureDevice //PacketInterface capturing interfece
 		{
-			set { packetCaptureDevice = value; }
+			set
+			{
+				packetCaptureDevice = value;
+				isDeviceOpend = false;
+			}
 			get { return packetCaptureDevice; }
 		}
 
@@ -24,10 +29,15 @@ namespace PacketFarmer
 		public PacketInterface(ICaptureDevice captureDevice)
 		{
 			PacketCaptureDevice = captureDevice;
+			isDeviceOpend = false;
 		}
 		public void openDevice(int readTimeoutMilliseconds)
 		{
-			packetCaptureDevice.Open(DeviceMode.Promiscuous, readTimeoutMilliseconds); //need to add error handling
+			if (isDeviceOpend != true)
+			{
+				packetCaptureDevice.Open(DeviceMode.Promiscuous, readTimeoutMilliseconds); //need to add error handling
+				isDeviceOpend = false;
+			}
 		}
 		public abstract String PacketCapture(ref bool successFlag);
 		//public abstract void PacketFillter(); make protocl packet fillter
@@ -60,6 +70,7 @@ namespace PacketFarmer
 					returnString += "Urgent Pointer:" + packet.UrgentPointer.ToString() + "\n";
 
 					returnString += "Data" + packet.PayloadData.ToString() + "\n";
+					returnString += "--------------------------------------------;";
 					successFlag = true; ;
  				}
 				else

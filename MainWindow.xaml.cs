@@ -24,18 +24,17 @@ namespace PacketFarmer
 {
 	public partial class MainWindow : Window
 	{
-		ProcessingManeger pm;
+		ProcessingManeger pm = new ProcessingManeger();
 		CaptureDeviceList captureDevices;
 		String selectedInterface = "";
 		String nowProtocol = "";// Using save
+		String captureData="";
 
 		public MainWindow()
 		{
-			InitializeComponent();
-			ProcessingManeger pm = new ProcessingManeger();
 			nowProtocol = "TCP";
 			pm.PacketInterface = new TCPPacketInterface();
-			
+			InitializeComponent();
 		}
 
 		private void comboBoxLoad(object sender, RoutedEventArgs e) //Load Interface 
@@ -52,12 +51,12 @@ namespace PacketFarmer
 				select_interface_combo.Items.Add(dev.Name);
 
 			selectedInterface = select_interface_combo.Items.GetItemAt(0).ToString();
-			pm.NowCatchingDevice = captureDevices.ElementAt(0);
+			pm.NowCatchingDevice=captureDevices.ElementAt(0);
 		}
 		private void menuStartClick(object sender, RoutedEventArgs e)
 		{
 			pm.openInterface();
-			pm.startCapturePacket();
+			pm.startCaputrePacket();
 		}
 		private void menuSaveClick(object sender, RoutedEventArgs e) //Save Packet Capturd Data
 		{
@@ -92,11 +91,17 @@ namespace PacketFarmer
 		}
 		private void cofirmInterface(object sender, RoutedEventArgs e) //Click Change Button
 		{
-			foreach (ICaptureDevice dev in captureDevices)
+			/*foreach (ICaptureDevice dev in captureDevices) //Maybe Use Linq?
 			{
 				if (dev.Name == selectedInterface)
 					pm.NowCatchingDevice = dev;
-			}
+			}*/
+
+			var selectDev = from dev in captureDevices
+								where dev.Name == selectedInterface
+								select dev;
+
+			pm.NowCatchingDevice = selectDev.ElementAt(0);
 		}
 
 		private void numEditLoad(object sender, RoutedEventArgs e)
