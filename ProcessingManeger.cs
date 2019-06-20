@@ -80,7 +80,7 @@ namespace PacketFarmer
 
 		} //Capture Stop
 
-		public void startCaputrePacket()
+		public void startCaputrePacket() //Packet capture thread start
 		{
 			if (!isThreadRunning)
 			{
@@ -89,7 +89,7 @@ namespace PacketFarmer
 			}
 		}
 
-		private void sendPacketData()
+		private void sendPacketData() //Send packetdata to main window
 		{
 			if (captureEndHandler != null)
 				captureEndHandler(resultData);
@@ -108,6 +108,7 @@ namespace PacketFarmer
 			}
 
 			isThreadRunning = false;
+			this.sendPacketData();
 
 		}
 		
