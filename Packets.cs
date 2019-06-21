@@ -15,6 +15,12 @@ namespace PacketFarmer //Make Packetcapture function event
 	{
 		private ICaptureDevice packetCaptureDevice;
 		private bool isDeviceOpend;
+		private int captureNum = 0;
+		private int nowCaptureNum = 0;
+		public delegate void captureSend();
+		public static event captureSend dataSend;
+		private String resultData = "";
+
 		public ICaptureDevice PacketCaptureDevice //PacketInterface capturing interfece
 		{
 			set
@@ -25,7 +31,36 @@ namespace PacketFarmer //Make Packetcapture function event
 			get { return packetCaptureDevice; }
 		}
 
-		public PacketInterface() { }
+		public String ResultData
+		{
+			get { return resultData; }
+			set { resultData += value; }
+		}
+
+		public int CaptureNum
+		{
+			set
+			{
+				captureNum = value;
+			}
+			get
+			{
+				return captureNum;
+			}
+		}
+
+		public int NowCaptureNum
+		{
+			set
+			{
+				nowCaptureNum = value;
+			}
+			get
+			{
+				return nowCaptureNum;
+			}
+		}
+
 		public PacketInterface(ICaptureDevice captureDevice)
 		{
 			PacketCaptureDevice = captureDevice;
@@ -39,50 +74,72 @@ namespace PacketFarmer //Make Packetcapture function event
 				isDeviceOpend = false;
 			}
 		}
-		public abstract String PacketCapture(ref bool successFlag);
+
+		public void dataSendEvent()
+		{
+			if (dataSend != null)
+				dataSend();
+		}
+
+		//public abstract void PacketCapture(int captureNum, ref bool successFlag);
+		public abstract void packetCapture(int captureNum);
+		public void stopPacketCapture()
+		{
+			packetCaptureDevice.StopCapture();
+			//packetCaptureDevice.Close();
+		}
+
+		public void sendPacketData() //Send packetdata to main window
+		{
+			dataSendEvent();
+			resultData = "";
+		}
 		//public abstract void PacketFillter(); make protocl packet fillter
 	}
 	class TCPPacketInterface : PacketInterface
 	{
-		public TCPPacketInterface() { }
 		public TCPPacketInterface(ICaptureDevice captureDevice) :base(captureDevice)
 		{ }
-		public override string PacketCapture(ref bool successFlag) //Packet capture and return to string (async)
+
+		public override void packetCapture(int captureNum)
 		{
-			RawCapture capturePacket;
-			String returnString="";
+			this.CaptureNum = captureNum;
+			PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
+			PacketCaptureDevice.StartCapture();
+		}
+		public void TcpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
+		{
+			RawCapture capturePacket=e.Packet;
+			
 
-			successFlag = false;
-			try
+			this.NowCaptureNum++;
+
+			if (this.NowCaptureNum <= this.CaptureNum)
 			{
-				if ((capturePacket = PacketCaptureDevice.GetNextPacket()) != null)
-				{
-					TcpPacket packet = (TcpPacket)PacketDotNet.TcpPacket.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
+				var packet = PacketDotNet.Packet.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
+				TcpPacket tcpPacket=(TcpPacket)packet.Extract(typeof(PacketDotNet.TcpPacket));
 
-					returnString += "Source Port:"+packet.SourcePort.ToString()+" ";
-					returnString += "DestinationPort:" + packet.DestinationPort.ToString() + "\n";
-					returnString += "SequenceNumber:" + packet.SequenceNumber.ToString() + "\n";
-					returnString += "AcknowledgmentNumber:" + packet.AcknowledgmentNumber.ToString() + "\n";
-					returnString +="DataOffset:" + packet.DataOffset.ToString()+" ";
-					returnString += "Flag:" + packet.AllFlags.ToString() + " ";
-					returnString += "Window Size:" + packet.WindowSize.ToString() + "\n";
-					returnString += "Checksum:" + packet.Checksum.ToString() + " ";
-					returnString += "Urgent Pointer:" + packet.UrgentPointer.ToString() + "\n";
+				ResultData += "Source Port:" + tcpPacket.SourcePort.ToString() + " ";
+				ResultData += "DestinationPort:" + tcpPacket.DestinationPort.ToString() + "\n";
+				ResultData += "SequenceNumber:" + tcpPacket.SequenceNumber.ToString() + "\n";
+				ResultData += "AcknowledgmentNumber:" + tcpPacket.AcknowledgmentNumber.ToString() + "\n";
+				ResultData += "DataOffset:" + tcpPacket.DataOffset.ToString() + " ";
+				ResultData += "Flag:" + tcpPacket.AllFlags.ToString() + " ";
+				ResultData += "Window Size:" + tcpPacket.WindowSize.ToString() + "\n";
+				ResultData += "Checksum:" + tcpPacket.Checksum.ToString() + " ";
+				ResultData += "Urgent Pointer:" + tcpPacket.UrgentPointer.ToString() + "\n";
 
-					returnString += "Data" + packet.PayloadData.ToString() + "\n";
-					returnString += "--------------------------------------------;";
-					successFlag = true; ;
- 				}
-				else
-					throw new Exception();
+				ResultData += "Data" + tcpPacket.PayloadData.ToString() + "\n";
+				ResultData += "--------------------------------------------\n;";
 
-				return returnString;
+				sendPacketData();
 			}
-			catch (Exception e)
+
+			else
 			{
-				successFlag = false;
-				returnString = "Can't Not Captured Next Packet.\n";
-				return returnString;
+				PacketCaptureDevice.StopCapture();
+				//PacketCaptureDevice.Close();
+				this.NowCaptureNum = 0;
 			}
 		}
 	}

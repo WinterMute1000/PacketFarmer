@@ -19,6 +19,7 @@ using SharpPcap.LibPcap;
 using SharpPcap.AirPcap;
 using SharpPcap.WinPcap;
 using Microsoft.Win32;
+using System.Windows.Threading;
 
 namespace PacketFarmer
 {
@@ -28,13 +29,12 @@ namespace PacketFarmer
 		CaptureDeviceList captureDevices;
 		String selectedInterface = "";
 		String nowProtocol = "";// Using save
-		String captureData="";
 
 		public MainWindow()
 		{
 			nowProtocol = "TCP";
-			pm.PacketInterface = new TCPPacketInterface();
-			ProcessingManeger.captureEndHandler += this.setTextBlock;
+			pm.PacketInterface = new TCPPacketInterface(pm.NowCatchingDevice);
+			PacketInterface.dataSend += this.setTextBlock;
 			InitializeComponent();
 		}
 
@@ -52,10 +52,12 @@ namespace PacketFarmer
 				select_interface_combo.Items.Add(dev.Name);
 
 			selectedInterface = select_interface_combo.Items.GetItemAt(0).ToString();
+			select_interface_combo.Text = select_interface_combo.Items.GetItemAt(0).ToString();
 			pm.NowCatchingDevice=captureDevices.ElementAt(0);
 		}
 		private void menuStartClick(object sender, RoutedEventArgs e)
 		{
+			show_packet.Text = "";
 			pm.openInterface();
 			pm.startCaputrePacket();
 		}
@@ -73,7 +75,7 @@ namespace PacketFarmer
 
 		private void TCPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
 		{
-			pm.PacketInterface = new TCPPacketInterface();
+			pm.PacketInterface = new TCPPacketInterface(pm.NowCatchingDevice);
 			nowProtocol = "TCP";
 		}
 		private void menuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
@@ -132,9 +134,10 @@ namespace PacketFarmer
 			}
 		}
 
-		public void setTextBlock(String captureData)
+		public void setTextBlock()
 		{
-			show_packet.Text = captureData;
+			Dispatcher.Invoke(DispatcherPriority.Normal, new Action(delegate
+			 { show_packet.Text += pm.PacketInterface.ResultData; }));
 		}
 
 	}

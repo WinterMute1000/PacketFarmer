@@ -9,24 +9,21 @@ using SharpPcap;
 using SharpPcap.LibPcap;
 using SharpPcap.AirPcap;
 using SharpPcap.WinPcap;
+using System.Windows;
 //This class's all method is async maybe
 
 namespace PacketFarmer
 {
 	class ProcessingManeger
 	{
-		public delegate void captureEnd(String captured);
-		public static event captureEnd captureEndHandler;
-
 		public static readonly int START_PACKET_NUM=5;
 		public static readonly int DEFAULT_TIMEOUT = 1000;
 		private int packetCaptureNum;
 		private ICaptureDevice nowCatchingDevice;
 		private PacketInterface packetInterface;
-		private Thread caputreThread;
-		public delegate void startAndStop();
-		private volatile bool isThreadRunning;
-		private String resultData="";
+		//private Thread caputreThread;
+		//private String resultData = "";
+		//private volatile bool isThreadRunning;
 
 		public ICaptureDevice NowCatchingDevice
 		{
@@ -35,17 +32,19 @@ namespace PacketFarmer
 				nowCatchingDevice = value;
 				packetInterface.PacketCaptureDevice = value;
 			}
+			get
+			{ return nowCatchingDevice; }
 		}
 
-		public String ResultData
+		/*public String ResultData
 		{
 			get{ return resultData; }
-		}
+		}*/
 
-		public bool IsThreadRunning
+		/*public bool IsThreadRunning
 		{
 			get { return isThreadRunning; }
-		}
+		}*/
 
 
 		public int PacketCaptureNum
@@ -56,13 +55,13 @@ namespace PacketFarmer
 
 		public PacketInterface PacketInterface
 		{
+			get { return packetInterface; }
 			set { packetInterface = value; }
 		}
 		public ProcessingManeger()
 		{
 			packetCaptureNum = START_PACKET_NUM;
-			caputreThread = new Thread(new ThreadStart(capturePacket));
-			isThreadRunning = false;
+			//isThreadRunning = false;
 		}
 		public void pcapError() //Error Handling
 		{
@@ -75,42 +74,32 @@ namespace PacketFarmer
 
 		public void captureStop()
 		{
-			if (isThreadRunning)
-				isThreadRunning = false;
+			/*if (isThreadRunning)
+				isThreadRunning = false;*/
+
+			packetInterface.stopPacketCapture();
 
 		} //Capture Stop
 
 		public void startCaputrePacket() //Packet capture thread start
 		{
-			if (!isThreadRunning)
+			/*if (!isThreadRunning)
 			{
+				caputreThread = new Thread(new ThreadStart(capturePacket));
 				caputreThread.Start();
 				isThreadRunning = true;
-			}
-		}
+			}*/
 
-		private void sendPacketData() //Send packetdata to main window
-		{
-			if (captureEndHandler != null)
-				captureEndHandler(resultData);
-		}
-		private void capturePacket()
-		{
-			bool successFlag = false;
 			packetInterface.openDevice(DEFAULT_TIMEOUT);
-
-			for (int packetCount = 0; packetCount < packetCaptureNum && isThreadRunning; packetCount++)
-			{
-				resultData += packetInterface.PacketCapture(ref successFlag);
-
-				if (!successFlag)
-					break;
-			}
-
-			isThreadRunning = false;
-			this.sendPacketData();
-
+			packetInterface.packetCapture(packetCaptureNum);
 		}
+
+		/*private void capturePacket()
+		{
+			//bool successFlag = false;
+			packetInterface.openDevice(DEFAULT_TIMEOUT);
+			packetInterface.packetCapture(packetCaptureNum);
+		}*/
 		
 	}
 }
