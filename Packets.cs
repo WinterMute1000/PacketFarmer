@@ -99,12 +99,13 @@ namespace PacketFarmer //Make Packetcapture function event
 	class TCPPacketInterface : PacketInterface
 	{
 		public TCPPacketInterface(ICaptureDevice captureDevice) :base(captureDevice)
-		{ }
+		{
+			PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
+		}
 
 		public override void packetCapture(int captureNum)
 		{
 			this.CaptureNum = captureNum;
-			PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
 			PacketCaptureDevice.StartCapture();
 		}
 		public void TcpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
