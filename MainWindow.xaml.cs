@@ -57,7 +57,7 @@ namespace PacketFarmer
 		}
 		private void menuStartClick(object sender, RoutedEventArgs e)
 		{
-			show_packet.Text = "";
+			show_packet.Text = "Start packet Capture.\n";
 			pm.openInterface();
 			pm.startCaputrePacket();
 		}
@@ -81,6 +81,7 @@ namespace PacketFarmer
 		private void menuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
 		{
 			pm.captureStop();
+			show_packet.Text+="Stop packet capture\n";
 		}
 
 		private void changeInterface(object sender, SelectionChangedEventArgs e) //OnSelectionChanged

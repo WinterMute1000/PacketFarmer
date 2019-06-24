@@ -34,7 +34,7 @@ namespace PacketFarmer //Make Packetcapture function event
 		public String ResultData
 		{
 			get { return resultData; }
-			set { resultData += value; }
+			set { resultData = value; }
 		}
 
 		public int CaptureNum
@@ -86,7 +86,9 @@ namespace PacketFarmer //Make Packetcapture function event
 		public void stopPacketCapture()
 		{
 			packetCaptureDevice.StopCapture();
-			//packetCaptureDevice.Close();
+			ResultData += this.NowCaptureNum + " packet captured \n";
+			this.NowCaptureNum = 0;
+			sendPacketData();
 		}
 
 		public void sendPacketData() //Send packetdata to main window
@@ -94,19 +96,24 @@ namespace PacketFarmer //Make Packetcapture function event
 			dataSendEvent();
 			resultData = "";
 		}
-		//public abstract void PacketFillter(); make protocl packet fillter
+		public abstract void PacketFillter(); //make protocl packet fillter
 	}
 	class TCPPacketInterface : PacketInterface
 	{
 		public TCPPacketInterface(ICaptureDevice captureDevice) :base(captureDevice)
-		{
-			PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
-		}
+		{}
 
 		public override void packetCapture(int captureNum)
 		{
 			this.CaptureNum = captureNum;
+			PacketCaptureDevice.Filter = "tcp";
+			PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
 			PacketCaptureDevice.StartCapture();
+		}
+
+		public override void PacketFillter()
+		{
+
 		}
 		public void TcpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
 		{
@@ -129,9 +136,20 @@ namespace PacketFarmer //Make Packetcapture function event
 				ResultData += "Window Size:" + tcpPacket.WindowSize.ToString() + "\n";
 				ResultData += "Checksum:" + tcpPacket.Checksum.ToString() + " ";
 				ResultData += "Urgent Pointer:" + tcpPacket.UrgentPointer.ToString() + "\n";
+				ResultData += "Data\n";
+				int i=1;
 
-				ResultData += "Data" + tcpPacket.PayloadData.ToString() + "\n";
-				ResultData += "--------------------------------------------\n;";
+				foreach (byte data in tcpPacket.PayloadData)
+				{
+					ResultData += data+" ";
+					if (i % 8 == 0)
+						ResultData += "\n";
+					i++;
+				}
+				ResultData += "\n--------------------------------------------\n;";
+
+				if (this.NowCaptureNum == this.CaptureNum)
+					ResultData += this.CaptureNum+" packet captured \n";
 
 				sendPacketData();
 			}

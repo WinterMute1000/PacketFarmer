@@ -21,9 +21,6 @@ namespace PacketFarmer
 		private int packetCaptureNum;
 		private ICaptureDevice nowCatchingDevice;
 		private PacketInterface packetInterface;
-		//private Thread caputreThread;
-		//private String resultData = "";
-		//private volatile bool isThreadRunning;
 
 		public ICaptureDevice NowCatchingDevice
 		{
@@ -35,17 +32,6 @@ namespace PacketFarmer
 			get
 			{ return nowCatchingDevice; }
 		}
-
-		/*public String ResultData
-		{
-			get{ return resultData; }
-		}*/
-
-		/*public bool IsThreadRunning
-		{
-			get { return isThreadRunning; }
-		}*/
-
 
 		public int PacketCaptureNum
 		{
@@ -74,32 +60,16 @@ namespace PacketFarmer
 
 		public void captureStop()
 		{
-			/*if (isThreadRunning)
-				isThreadRunning = false;*/
-
 			packetInterface.stopPacketCapture();
 
 		} //Capture Stop
 
 		public void startCaputrePacket() //Packet capture thread start
 		{
-			/*if (!isThreadRunning)
-			{
-				caputreThread = new Thread(new ThreadStart(capturePacket));
-				caputreThread.Start();
-				isThreadRunning = true;
-			}*/
 
 			packetInterface.openDevice(DEFAULT_TIMEOUT);
 			packetInterface.packetCapture(packetCaptureNum);
 		}
-
-		/*private void capturePacket()
-		{
-			//bool successFlag = false;
-			packetInterface.openDevice(DEFAULT_TIMEOUT);
-			packetInterface.packetCapture(packetCaptureNum);
-		}*/
 		
 	}
 }
