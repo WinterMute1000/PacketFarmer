@@ -25,16 +25,18 @@ namespace PacketFarmer
 {
 	public partial class MainWindow : Window
 	{
-		ProcessingManeger pm = new ProcessingManeger();
-		CaptureDeviceList captureDevices;
-		String selectedInterface = "";
-		String nowProtocol = "";// Using save
+		private ProcessingManeger pm = new ProcessingManeger();
+		private CaptureDeviceList captureDevices;
+		private String selectedInterface = "";
+		private String nowProtocol = "";// Using save
+		private bool isStarted = false;
 
 		public MainWindow()
 		{
 			nowProtocol = "TCP";
 			pm.PacketInterface = new TCPPacketInterface(pm.NowCatchingDevice);
 			PacketInterface.dataSend += this.setTextBlock;
+			PacketInterface.captureEndHandle += this.captureEnd;
 			InitializeComponent();
 		}
 
@@ -57,12 +59,21 @@ namespace PacketFarmer
 		}
 		private void menuStartClick(object sender, RoutedEventArgs e)
 		{
+			if (isStarted)
+				return;
+
 			show_packet.Text = "Start packet Capture.\n";
+			isStarted = true;
 			pm.openInterface();
 			pm.startCaputrePacket();
 		}
 		private void menuSaveClick(object sender, RoutedEventArgs e) //Save Packet Capturd Data
 		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
 			SaveFileDialog saveFileDialog = new SaveFileDialog();
 			saveFileDialog.Filter= "Text file(*.txt) | *.txt";
 			saveFileDialog.FileName= DateTime.Now.ToString("yyyy-MM-dd-HH-mm")+"-"+nowProtocol+"-"
@@ -75,6 +86,11 @@ namespace PacketFarmer
 
 		private void TCPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
 		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
 			pm.PacketInterface = new TCPPacketInterface(pm.NowCatchingDevice);
 			nowProtocol = "TCP";
 		}
@@ -86,6 +102,12 @@ namespace PacketFarmer
 
 		private void changeInterface(object sender, SelectionChangedEventArgs e) //OnSelectionChanged
 		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
+
 			if (select_interface_combo.SelectedIndex >= 0)
 			{
 				selectedInterface = select_interface_combo.SelectedItem.ToString();
@@ -95,11 +117,11 @@ namespace PacketFarmer
 		}
 		private void cofirmInterface(object sender, RoutedEventArgs e) //Click Change Button
 		{
-			/*foreach (ICaptureDevice dev in captureDevices) //Maybe Use Linq?
+			if (isStarted)
 			{
-				if (dev.Name == selectedInterface)
-					pm.NowCatchingDevice = dev;
-			}*/
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
 
 			var selectDev = from dev in captureDevices
 								where dev.Name == selectedInterface
@@ -114,6 +136,12 @@ namespace PacketFarmer
 		}
 		private void changePacketCaptureNum(object sender, RoutedEventArgs e) //Click Num Button
 		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
+
 			int textNum = int.Parse(packet_num_edit.Text.ToString());
 
 			if (textNum < 0 || textNum > 1024)
@@ -141,5 +169,6 @@ namespace PacketFarmer
 			 { show_packet.Text += pm.PacketInterface.ResultData; }));
 		}
 
+		public void captureEnd(){ isStarted = false; }
 	}
 }

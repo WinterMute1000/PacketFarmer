@@ -19,6 +19,8 @@ namespace PacketFarmer //Make Packetcapture function event
 		private int nowCaptureNum = 0;
 		public delegate void captureSend();
 		public static event captureSend dataSend;
+		public delegate void captureEnd();
+		public static event captureEnd captureEndHandle;
 		private String resultData = "";
 
 		public ICaptureDevice PacketCaptureDevice //PacketInterface capturing interfece
@@ -81,7 +83,12 @@ namespace PacketFarmer //Make Packetcapture function event
 				dataSend();
 		}
 
-		//public abstract void PacketCapture(int captureNum, ref bool successFlag);
+		public void captureEndEvent()
+		{
+			if (captureEndHandle != null)
+				captureEndHandle();
+		}
+
 		public abstract void packetCapture(int captureNum);
 		public void stopPacketCapture()
 		{
@@ -89,6 +96,7 @@ namespace PacketFarmer //Make Packetcapture function event
 			ResultData += this.NowCaptureNum + " packet captured \n";
 			this.NowCaptureNum = 0;
 			sendPacketData();
+			captureEndEvent();
 		}
 
 		public void sendPacketData() //Send packetdata to main window
@@ -96,7 +104,7 @@ namespace PacketFarmer //Make Packetcapture function event
 			dataSendEvent();
 			resultData = "";
 		}
-		public abstract void PacketFillter(); //make protocl packet fillter
+		//public void PacketFillter(); //make protocl packet fillter
 	}
 	class TCPPacketInterface : PacketInterface
 	{
@@ -109,11 +117,6 @@ namespace PacketFarmer //Make Packetcapture function event
 			PacketCaptureDevice.Filter = "tcp";
 			PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
 			PacketCaptureDevice.StartCapture();
-		}
-
-		public override void PacketFillter()
-		{
-
 		}
 		public void TcpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
 		{
@@ -159,6 +162,7 @@ namespace PacketFarmer //Make Packetcapture function event
 				PacketCaptureDevice.StopCapture();
 				//PacketCaptureDevice.Close();
 				this.NowCaptureNum = 0;
+				captureEndEvent();
 			}
 		}
 	}
