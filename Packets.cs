@@ -144,7 +144,7 @@ namespace PacketFarmer //Make Packetcapture function event
 
 				foreach (byte data in tcpPacket.PayloadData)
 				{
-					ResultData += data+" ";
+					ResultData += Convert.ToString(data,16)+" ";
 					if (i % 8 == 0)
 						ResultData += "\n";
 					i++;
