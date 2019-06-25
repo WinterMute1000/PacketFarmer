@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace PacketFarmer //Make Packetcapture function event
 {
@@ -68,7 +69,7 @@ namespace PacketFarmer //Make Packetcapture function event
 			PacketCaptureDevice = captureDevice;
 			isDeviceOpend = false;
 		}
-		public void openDevice(int readTimeoutMilliseconds)
+		public void OpenDevice(int readTimeoutMilliseconds)
 		{
 			if (isDeviceOpend != true)
 			{
@@ -77,46 +78,67 @@ namespace PacketFarmer //Make Packetcapture function event
 			}
 		}
 
-		public void dataSendEvent()
+		public void DataSendEvent()
 		{
 			if (dataSend != null)
 				dataSend();
 		}
 
-		public void captureEndEvent()
+		public void CaptureEndEvent()
 		{
 			if (captureEndHandle != null)
 				captureEndHandle();
 		}
 
-		public abstract void packetCapture(int captureNum);
+		public abstract void PacketCapture(int captureNum);
+		public abstract void PacketCapture(int captureNum, string filter);
 		public void stopPacketCapture()
 		{
 			packetCaptureDevice.StopCapture();
 			ResultData += this.NowCaptureNum + " packet captured \n";
 			this.NowCaptureNum = 0;
-			sendPacketData();
-			captureEndEvent();
+			SendPacketData();
+			CaptureEndEvent();
 		}
 
-		public void sendPacketData() //Send packetdata to main window
+		public void SendPacketData() //Send packetdata to main window
 		{
-			dataSendEvent();
+			DataSendEvent();
 			resultData = "";
 		}
-		//public void PacketFillter(); //make protocl packet fillter
+		public void SetPacketFillter(string filter) //make protocl packet fillter
+		{
+			PacketCaptureDevice.Filter = "and" + filter;
+		}
 	}
 	class TCPPacketInterface : PacketInterface
 	{
 		public TCPPacketInterface(ICaptureDevice captureDevice) :base(captureDevice)
 		{}
 
-		public override void packetCapture(int captureNum)
+		public override void PacketCapture(int captureNum)
 		{
 			this.CaptureNum = captureNum;
 			PacketCaptureDevice.Filter = "tcp";
 			PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
 			PacketCaptureDevice.StartCapture();
+		}
+
+		public override void PacketCapture(int captureNum,string filter)
+		{
+			this.CaptureNum = captureNum;
+			PacketCaptureDevice.Filter = "tcp";
+			try
+			{
+				SetPacketFillter(filter);
+				PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
+				PacketCaptureDevice.StartCapture();
+			}
+			catch (PcapException wrongFilter)
+			{
+				Console.WriteLine(wrongFilter.StackTrace);
+				MessageBox.Show("Please reset filter and start.", "Wrong filter!", MessageBoxButton.OK);
+			}
 		}
 		public void TcpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
 		{
@@ -125,44 +147,51 @@ namespace PacketFarmer //Make Packetcapture function event
 
 			this.NowCaptureNum++;
 
-			if (this.NowCaptureNum <= this.CaptureNum)
+			try
 			{
-				var packet = PacketDotNet.Packet.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
-				TcpPacket tcpPacket=(TcpPacket)packet.Extract(typeof(PacketDotNet.TcpPacket));
-
-				ResultData += "Source Port:" + tcpPacket.SourcePort.ToString() + " ";
-				ResultData += "DestinationPort:" + tcpPacket.DestinationPort.ToString() + "\n";
-				ResultData += "SequenceNumber:" + tcpPacket.SequenceNumber.ToString() + "\n";
-				ResultData += "AcknowledgmentNumber:" + tcpPacket.AcknowledgmentNumber.ToString() + "\n";
-				ResultData += "DataOffset:" + tcpPacket.DataOffset.ToString() + " ";
-				ResultData += "Flag:" + tcpPacket.AllFlags.ToString() + " ";
-				ResultData += "Window Size:" + tcpPacket.WindowSize.ToString() + "\n";
-				ResultData += "Checksum:" + tcpPacket.Checksum.ToString() + " ";
-				ResultData += "Urgent Pointer:" + tcpPacket.UrgentPointer.ToString() + "\n";
-				ResultData += "Data\n";
-				int i=1;
-
-				foreach (byte data in tcpPacket.PayloadData)
+				if (this.NowCaptureNum <= this.CaptureNum)
 				{
-					ResultData += Convert.ToString(data,16)+" ";
-					if (i % 8 == 0)
-						ResultData += "\n";
-					i++;
+					var packet = PacketDotNet.Packet.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
+					TcpPacket tcpPacket = (TcpPacket)packet.Extract(typeof(PacketDotNet.TcpPacket));
+					ResultData += "Source Port:" + tcpPacket.SourcePort.ToString() + " ";
+					ResultData += "DestinationPort:" + tcpPacket.DestinationPort.ToString() + "\n";
+					ResultData += "SequenceNumber:" + tcpPacket.SequenceNumber.ToString() + "\n";
+					ResultData += "AcknowledgmentNumber:" + tcpPacket.AcknowledgmentNumber.ToString() + "\n";
+					ResultData += "DataOffset:" + tcpPacket.DataOffset.ToString() + " ";
+					ResultData += "Flag:" + tcpPacket.AllFlags.ToString() + " ";
+					ResultData += "Window Size:" + tcpPacket.WindowSize.ToString() + "\n";
+					ResultData += "Checksum:" + tcpPacket.Checksum.ToString() + " ";
+					ResultData += "Urgent Pointer:" + tcpPacket.UrgentPointer.ToString() + "\n";
+					ResultData += "Data\n";
+					int i = 1;
+
+					foreach (byte data in tcpPacket.PayloadData)
+					{
+						ResultData += Convert.ToString(data, 16) + " ";
+						if (i % 8 == 0)
+							ResultData += "\n";
+						i++;
+					}
+					ResultData += "\n--------------------------------------------\n;";
+
+					if (this.NowCaptureNum == this.CaptureNum)
+						ResultData += this.CaptureNum + " packet captured \n";
+					SendPacketData();
 				}
-				ResultData += "\n--------------------------------------------\n;";
 
-				if (this.NowCaptureNum == this.CaptureNum)
-					ResultData += this.CaptureNum+" packet captured \n";
-
-				sendPacketData();
+				else
+				{
+					PacketCaptureDevice.StopCapture();
+					//PacketCaptureDevice.Close();
+					this.NowCaptureNum = 0;
+					CaptureEndEvent();
+				}
 			}
-
-			else
+			catch (NullReferenceException nullException)
 			{
-				PacketCaptureDevice.StopCapture();
-				//PacketCaptureDevice.Close();
-				this.NowCaptureNum = 0;
-				captureEndEvent();
+				Console.WriteLine(nullException.StackTrace);
+				MessageBox.Show("Can't packet extracted. \n Are you set others protocol in filter?"
+					, "Warining", System.Windows.MessageBoxButton.OK);
 			}
 		}
 	}

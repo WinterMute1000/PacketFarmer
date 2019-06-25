@@ -20,6 +20,7 @@ using SharpPcap.AirPcap;
 using SharpPcap.WinPcap;
 using Microsoft.Win32;
 using System.Windows.Threading;
+using System.Text.RegularExpressions;
 
 namespace PacketFarmer
 {
@@ -30,17 +31,19 @@ namespace PacketFarmer
 		private String selectedInterface = "";
 		private String nowProtocol = "";// Using save
 		private bool isStarted = false;
+		private bool isPacketFilterSet = false;
+		private string packetFilter="";
 
 		public MainWindow()
 		{
 			nowProtocol = "TCP";
 			pm.PacketInterface = new TCPPacketInterface(pm.NowCatchingDevice);
-			PacketInterface.dataSend += this.setTextBlock;
-			PacketInterface.captureEndHandle += this.captureEnd;
+			PacketInterface.dataSend += this.SetTextBlock;
+			PacketInterface.captureEndHandle += this.CaptureEnd;
 			InitializeComponent();
 		}
 
-		private void comboBoxLoad(object sender, RoutedEventArgs e) //Load Interface 
+		private void ComboBoxLoad(object sender, RoutedEventArgs e) //Load Interface 
 		{
 			captureDevices = CaptureDeviceList.Instance;
 
@@ -57,17 +60,22 @@ namespace PacketFarmer
 			select_interface_combo.Text = select_interface_combo.Items.GetItemAt(0).ToString();
 			pm.NowCatchingDevice=captureDevices.ElementAt(0);
 		}
-		private void menuStartClick(object sender, RoutedEventArgs e)
+		private void MenuStartClick(object sender, RoutedEventArgs e)
 		{
 			if (isStarted)
 				return;
 
 			show_packet.Text = "Start packet Capture.\n";
 			isStarted = true;
-			pm.openInterface();
-			pm.startCaputrePacket();
+			pm.OpenInterface();
+
+			if (isPacketFilterSet)
+				pm.StartCaputrePacket(packetFilter);
+
+			else
+				pm.StartCaputrePacket();
 		}
-		private void menuSaveClick(object sender, RoutedEventArgs e) //Save Packet Capturd Data
+		private void MenuSaveClick(object sender, RoutedEventArgs e) //Save Packet Capturd Data
 		{
 			if (isStarted)
 			{
@@ -84,6 +92,20 @@ namespace PacketFarmer
 
 		}
 
+		private void SetFilter(object sender, RoutedEventArgs e)
+		{
+			if (filter_edit.Text == "")
+			{
+				packetFilter = "";
+				isPacketFilterSet = false;
+			}
+			else
+			{
+				isPacketFilterSet = true;
+				packetFilter = filter_edit.Text;
+			}
+		}
+
 		private void TCPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
 		{
 			if (isStarted)
@@ -94,13 +116,13 @@ namespace PacketFarmer
 			pm.PacketInterface = new TCPPacketInterface(pm.NowCatchingDevice);
 			nowProtocol = "TCP";
 		}
-		private void menuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
+		private void MenuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
 		{
-			pm.captureStop();
+			pm.CaptureStop();
 			show_packet.Text+="Stop packet capture\n";
 		}
 
-		private void changeInterface(object sender, SelectionChangedEventArgs e) //OnSelectionChanged
+		private void ChangeInterface(object sender, SelectionChangedEventArgs e) //OnSelectionChanged
 		{
 			if (isStarted)
 			{
@@ -115,7 +137,7 @@ namespace PacketFarmer
 			else
 				MessageBox.Show("Wrong select.", "Warining", MessageBoxButton.OK);
 		}
-		private void cofirmInterface(object sender, RoutedEventArgs e) //Click Change Button
+		private void CofirmInterface(object sender, RoutedEventArgs e) //Click Change Button
 		{
 			if (isStarted)
 			{
@@ -130,11 +152,11 @@ namespace PacketFarmer
 			pm.NowCatchingDevice = selectDev.ElementAt(0);
 		}
 
-		private void numEditLoad(object sender, RoutedEventArgs e)
+		private void NumEditLoad(object sender, RoutedEventArgs e)
 		{
 			packet_num_edit.Text = ProcessingManeger.START_PACKET_NUM.ToString();
 		}
-		private void changePacketCaptureNum(object sender, RoutedEventArgs e) //Click Num Button
+		private void ChangePacketCaptureNum(object sender, RoutedEventArgs e) //Click Num Button
 		{
 			if (isStarted)
 			{
@@ -142,33 +164,38 @@ namespace PacketFarmer
 				return;
 			}
 
-			int textNum = int.Parse(packet_num_edit.Text.ToString());
-
-			if (textNum < 0 || textNum > 1024)
+			try
 			{
-				MessageBox.Show("Capture Length(1~1024)", "Warining", MessageBoxButton.OK);
+				int textNum = int.Parse(packet_num_edit.Text.ToString());
+
+				if (textNum < 0 || textNum > 1024)
+				{
+					MessageBox.Show("Capture Length(1~1024)", "Warining", MessageBoxButton.OK);
+					return;
+				}
+
+				pm.PacketCaptureNum = textNum;
+			}
+			catch (FormatException formatException)
+			{
+				Console.WriteLine(formatException.StackTrace);
+				MessageBox.Show("Packet capture num is empty!", "Warining", MessageBoxButton.OK);
 				return;
 			}
-
-			pm.PacketCaptureNum = textNum;
 		}
 
-		private void editPreviewKeyDown(object sender, KeyEventArgs e)
+		private void EditPreviewInput(object sender, TextCompositionEventArgs e)
 		{
-			if (!(((Key.D0 <= e.Key) && (e.Key <= Key.D9))
-				|| ((Key.NumPad0 <= e.Key) && (e.Key <= Key.NumPad9))
-				|| e.Key == Key.Back))
-			{
-				e.Handled = true;
-			}
+			Regex regex = new Regex("[^0-9]+");
+			e.Handled = regex.IsMatch(e.Text);
 		}
 
-		public void setTextBlock()
+		public void SetTextBlock()
 		{
 			Dispatcher.Invoke(DispatcherPriority.Normal, new Action(delegate
 			 { show_packet.Text += pm.PacketInterface.ResultData; }));
 		}
 
-		public void captureEnd(){ isStarted = false; }
+		public void CaptureEnd(){ isStarted = false; }
 	}
 }

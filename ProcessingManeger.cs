@@ -49,27 +49,31 @@ namespace PacketFarmer
 			packetCaptureNum = START_PACKET_NUM;
 			//isThreadRunning = false;
 		}
-		public void pcapError() //Error Handling
+
+		public void OpenInterface() //Open Interface
 		{
+			packetInterface.OpenDevice(DEFAULT_TIMEOUT);
 		}
 
-		public void openInterface() //Open Interface
-		{
-			packetInterface.openDevice(DEFAULT_TIMEOUT);
-		}
-
-		public void captureStop()
+		public void CaptureStop()
 		{
 			packetInterface.stopPacketCapture();
 
 		} //Capture Stop
 
-		public void startCaputrePacket() //Packet capture thread start
+		public void StartCaputrePacket() //Packet capture thread start
 		{
 
-			packetInterface.openDevice(DEFAULT_TIMEOUT);
-			packetInterface.packetCapture(packetCaptureNum);
+			packetInterface.OpenDevice(DEFAULT_TIMEOUT);
+			packetInterface.PacketCapture(packetCaptureNum);
 		}
-		
+
+		public void StartCaputrePacket(string filter) //Packet capture thread start
+		{
+
+			packetInterface.OpenDevice(DEFAULT_TIMEOUT);
+			packetInterface.PacketCapture(packetCaptureNum,filter);
+		}
+
 	}
 }

@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PacketFarmer"
         mc:Ignorable="d"
-        Title="PacketFarmer" Height="600" Width="800">
+        Title="PacketFarmer" Height="800" Width="1000">
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="3*"/>
+			<RowDefinition Height="5*" />
 			<RowDefinition Height="5*" />
 			<RowDefinition Height="5*" />
 			<RowDefinition Height="5*" />
@@ -21,29 +22,34 @@
 			<ColumnDefinition Width="25*"/>
 		</Grid.ColumnDefinitions>
 		<Menu Grid.Row="0" Grid.ColumnSpan="4">
-			<MenuItem Header="Start" Click="menuStartClick"/>
-			<MenuItem Header="Save" Click="menuSaveClick"/>
+			<MenuItem Header="Start" Click="MenuStartClick"/>
+			<MenuItem Header="Save" Click="MenuSaveClick"/>
 			<MenuItem Header="SelectProtocol">
 				<MenuItem Header="TCP" Click="TCPSelected"/>
 			</MenuItem>
 			<!--When Program Start, Add SubMenu(Protocol)-->
-			<MenuItem Header="Stop" Click="menuStopClick"/>
+			<MenuItem Header="Stop" Click="MenuStopClick"/>
 		</Menu>
 		<TextBlock Text="Select Interface" FontSize="25" Grid.Row="1" Grid.Column="0"
 				   HorizontalAlignment="Center" VerticalAlignment="Center"/>
 		<ComboBox Name="select_interface_combo" Grid.Row="2" Grid.ColumnSpan="3"
 				  IsEditable="False"
-				  Loaded="comboBoxLoad"
-				  SelectionChanged="changeInterface"/>
+				  Loaded="ComboBoxLoad"
+				  SelectionChanged="ChangeInterface"/>
 		<!--ItemSource Setting Interface-->
-		<Button Name="confirm_change" Grid.Row="2" Grid.Column="3" Width="100" Click="cofirmInterface">Confirm</Button>
+		<Button Name="confirm_change" Grid.Row="2" Grid.Column="3" Width="100" Click="CofirmInterface">Confirm</Button>
 		<TextBlock Grid.Row="3" Grid.Column="0" 
 				   Text="Please input packet capture number" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
-		<TextBox Name="packet_num_edit" Grid.Row="3" Grid.Column="1" Loaded="numEditLoad"
-				 PreviewKeyDown="editPreviewKeyDown"/>
+		<TextBox Name="packet_num_edit" Grid.Row="3" Grid.Column="1" Loaded="NumEditLoad"
+				 PreviewTextInput="EditPreviewInput"/>
 		<!--Only Input Number-->
-		<Button Name="confirm_number" Grid.Row="3" Grid.Column="2" Width="100" Click="changePacketCaptureNum">Confirm</Button>
-		<ScrollViewer Grid.Row="4" Grid.ColumnSpan="4" 
+		<Button Name="confirm_number" Grid.Row="3" Grid.Column="2" Width="100" Click="ChangePacketCaptureNum">Confirm</Button>
+		<TextBlock Grid.Row="4" Grid.Column="0" 
+				   Text="Filter" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
+		<TextBox Name="filter_edit" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"/>
+		<!--Only Input Number-->
+		<Button Name="confirm_filter" Grid.Row="4" Grid.Column="3" Width="100" Click="SetFilter">Confirm</Button>
+		<ScrollViewer Grid.Row="5" Grid.ColumnSpan="4" 
 					  VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Auto" >
 			<StackPanel>
 				<TextBlock Name="show_packet" Width="Auto" Height="Auto" TextAlignment="Left" FontSize="10" />
