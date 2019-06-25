@@ -192,6 +192,10 @@ namespace PacketFarmer //Make Packetcapture function event
 				Console.WriteLine(nullException.StackTrace);
 				MessageBox.Show("Can't packet extracted. \n Are you set others protocol in filter?"
 					, "Warining", System.Windows.MessageBoxButton.OK);
+				PacketCaptureDevice.StopCapture();
+				//PacketCaptureDevice.Close();
+				this.NowCaptureNum = 0;
+				CaptureEndEvent();
 			}
 		}
 	}
