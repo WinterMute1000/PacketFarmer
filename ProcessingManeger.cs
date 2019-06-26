@@ -1,15 +1,5 @@
-﻿using System;
-using System.Threading;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PacketDotNet;
-using SharpPcap;
-using SharpPcap.LibPcap;
-using SharpPcap.AirPcap;
-using SharpPcap.WinPcap;
-using System.Windows;
+﻿using SharpPcap;
+
 //This class's all method is async maybe
 
 namespace PacketFarmer
@@ -57,7 +47,7 @@ namespace PacketFarmer
 
 		public void CaptureStop()
 		{
-			packetInterface.stopPacketCapture();
+			packetInterface.StopPacketCapture();
 
 		} //Capture Stop
 

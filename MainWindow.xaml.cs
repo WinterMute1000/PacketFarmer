@@ -1,23 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using PacketDotNet;
 using SharpPcap;
-using SharpPcap.LibPcap;
-using SharpPcap.AirPcap;
-using SharpPcap.WinPcap;
 using Microsoft.Win32;
 using System.Windows.Threading;
 using System.Text.RegularExpressions;
@@ -84,11 +71,15 @@ namespace PacketFarmer
 			}
 			SaveFileDialog saveFileDialog = new SaveFileDialog();
 			saveFileDialog.Filter= "Text file(*.txt) | *.txt";
-			saveFileDialog.FileName= DateTime.Now.ToString("yyyy-MM-dd-HH-mm")+"-"+nowProtocol+"-"
-				+pm.PacketCaptureNum+" packet captured";
+			saveFileDialog.FileName= DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")+"-"+nowProtocol
+				+" packet captured";
 
 			if (saveFileDialog.ShowDialog() == true)
-				File.WriteAllText(saveFileDialog.FileName, show_packet.Text);
+			{
+				char[] sep = { '\n' };
+				File.WriteAllLines(saveFileDialog.FileName,
+					show_packet.Text.Split(sep));
+			}
 
 		}
 
@@ -115,6 +106,17 @@ namespace PacketFarmer
 			}
 			pm.PacketInterface = new TCPPacketInterface(pm.NowCatchingDevice);
 			nowProtocol = "TCP";
+		}
+
+		private void IPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
+		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
+			pm.PacketInterface = new IPPacketInterface(pm.NowCatchingDevice);
+			nowProtocol = "IP";
 		}
 		private void MenuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
 		{

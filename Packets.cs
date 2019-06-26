@@ -1,13 +1,8 @@
 ﻿using PacketDotNet;
 using SharpPcap;
-using SharpPcap.LibPcap;
-using SharpPcap.AirPcap;
-using SharpPcap.WinPcap;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
 
 namespace PacketFarmer //Make Packetcapture function event
@@ -92,8 +87,10 @@ namespace PacketFarmer //Make Packetcapture function event
 
 		public abstract void PacketCapture(int captureNum);
 		public abstract void PacketCapture(int captureNum, string filter);
-		public void stopPacketCapture()
+		public abstract void RemoveHanlder();
+		public void StopPacketCapture()
 		{
+			RemoveHanlder();
 			packetCaptureDevice.StopCapture();
 			ResultData += this.NowCaptureNum + " packet captured \n";
 			this.NowCaptureNum = 0;
@@ -104,7 +101,7 @@ namespace PacketFarmer //Make Packetcapture function event
 		public void SendPacketData() //Send packetdata to main window
 		{
 			DataSendEvent();
-			resultData = "";
+			resultData="";
 		}
 		public void SetPacketFillter(string filter) //make protocl packet fillter
 		{
@@ -113,21 +110,23 @@ namespace PacketFarmer //Make Packetcapture function event
 	}
 	class TCPPacketInterface : PacketInterface
 	{
-		public TCPPacketInterface(ICaptureDevice captureDevice) :base(captureDevice)
-		{}
+		public TCPPacketInterface(ICaptureDevice captureDevice) : base(captureDevice)
+		{ }
 
 		public override void PacketCapture(int captureNum)
 		{
 			this.CaptureNum = captureNum;
 			PacketCaptureDevice.Filter = "tcp";
+			ResultData = "";
 			PacketCaptureDevice.OnPacketArrival += TcpPacketCapture;
 			PacketCaptureDevice.StartCapture();
 		}
 
-		public override void PacketCapture(int captureNum,string filter)
+		public override void PacketCapture(int captureNum, string filter)
 		{
 			this.CaptureNum = captureNum;
 			PacketCaptureDevice.Filter = "tcp";
+			ResultData = "";
 			try
 			{
 				SetPacketFillter(filter);
@@ -142,8 +141,8 @@ namespace PacketFarmer //Make Packetcapture function event
 		}
 		public void TcpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
 		{
-			RawCapture capturePacket=e.Packet;
-			
+			RawCapture capturePacket = e.Packet;
+
 
 			this.NowCaptureNum++;
 
@@ -172,16 +171,17 @@ namespace PacketFarmer //Make Packetcapture function event
 							ResultData += "\n";
 						i++;
 					}
-					ResultData += "\n--------------------------------------------\n;";
+					ResultData += "\n--------------------------------------------\n";
 
 					if (this.NowCaptureNum == this.CaptureNum)
-						ResultData += this.CaptureNum + " packet captured \n";
+						StopPacketCapture();
+
 					SendPacketData();
 				}
 
 				else
 				{
-					PacketCaptureDevice.StopCapture();
+					StopPacketCapture();
 					//PacketCaptureDevice.Close();
 					this.NowCaptureNum = 0;
 					CaptureEndEvent();
@@ -192,11 +192,112 @@ namespace PacketFarmer //Make Packetcapture function event
 				Console.WriteLine(nullException.StackTrace);
 				MessageBox.Show("Can't packet extracted. \n Are you set others protocol in filter?"
 					, "Warining", System.Windows.MessageBoxButton.OK);
-				PacketCaptureDevice.StopCapture();
+				StopPacketCapture();
 				//PacketCaptureDevice.Close();
-				this.NowCaptureNum = 0;
-				CaptureEndEvent();
 			}
+		}
+
+		public override void RemoveHanlder()
+		{
+			PacketCaptureDevice.OnPacketArrival -= TcpPacketCapture;
+		}
+	}
+	class IPPacketInterface : PacketInterface
+	{
+		public IPPacketInterface(ICaptureDevice captureDevice) : base(captureDevice)
+		{ }
+
+		public override void PacketCapture(int captureNum)
+		{
+			this.CaptureNum = captureNum;
+			PacketCaptureDevice.Filter = "ip";
+			ResultData = "";
+			PacketCaptureDevice.OnPacketArrival += IpPacketCapture;
+			PacketCaptureDevice.StartCapture();
+		}
+
+		public override void PacketCapture(int captureNum, string filter)
+		{
+			this.CaptureNum = captureNum;
+			PacketCaptureDevice.Filter = "ip";
+			ResultData = "";
+			try
+			{
+				SetPacketFillter(filter);
+				PacketCaptureDevice.OnPacketArrival += IpPacketCapture;
+				PacketCaptureDevice.StartCapture();
+			}
+			catch (PcapException wrongFilter)
+			{
+				Console.WriteLine(wrongFilter.StackTrace);
+				MessageBox.Show("Please reset filter and start.", "Wrong filter!", MessageBoxButton.OK);
+			}
+		}
+		public void IpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
+		{
+			RawCapture capturePacket = e.Packet;
+
+
+			this.NowCaptureNum++;
+
+			try
+			{
+				if (this.NowCaptureNum <= this.CaptureNum)
+				{
+					var packet = PacketDotNet.Packet.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
+					IpPacket IpPacket = (IpPacket)packet.Extract(typeof(PacketDotNet.IpPacket));
+					ResultData += "Version:" + IpPacket.Version+" ";
+					ResultData += "Header Length:" + IpPacket.HeaderLength + " ";
+					//ResultData += "QOS:" + IpPacket.TypeOfService + " ";
+					ResultData += "Packet Length:"+IpPacket.PayloadLength+"\n";
+					//ResultData += "Identifier:" + IpPacket.Id + " ";
+					//ResultData += "Flags:" + IpPacket.FragmentFlags + " ";
+					//ResultData += "Fragment Offset:" + IpPacket.FragmentOffset + "\n";
+					ResultData += "TTL:" + IpPacket.TimeToLive + " ";
+					ResultData += "Protocol:" + IpPacket.Protocol + " ";
+					//ResultData += "CheckSum:" + IpPacket.Checksum + "\n";
+					ResultData += "Source:" + IpPacket.SourceAddress + "\n";
+					ResultData += "Destination:" + IpPacket.DestinationAddress + "\n";
+					int i = 1;
+
+					if (IpPacket.PayloadData != null)
+					{
+						foreach (byte data in IpPacket.PayloadData)
+						{
+							ResultData += Convert.ToString(data, 16) + " ";
+							if (i % 8 == 0)
+								ResultData += "\n";
+							i++;
+						}
+					}
+					ResultData += "\n--------------------------------------------\n";
+
+					if (this.NowCaptureNum == this.CaptureNum)
+						StopPacketCapture();
+					SendPacketData();
+				}
+
+				else
+				{
+					StopPacketCapture();
+					//PacketCaptureDevice.Close();
+					CaptureEndEvent();
+				}
+			}
+			catch (NullReferenceException nullException)
+			{
+				Console.WriteLine(nullException.StackTrace);
+				MessageBox.Show("Can't packet extracted. \n Are you set others protocol in filter?"
+					, "Warining", System.Windows.MessageBoxButton.OK);
+				PacketCaptureDevice.OnPacketArrival -= IpPacketCapture;
+				StopPacketCapture();
+				//PacketCaptureDevice.Close();
+			}
+		}
+
+		public override void RemoveHanlder()
+		{
+			PacketCaptureDevice.OnPacketArrival -= IpPacketCapture;
 		}
 	}
 }
