@@ -27,6 +27,8 @@
 			<MenuItem Header="SelectProtocol">
 				<MenuItem Header="TCP" Click="TCPSelected"/>
 				<MenuItem Header="IP" Click="IPSelected"/>
+				<MenuItem Header="UDP" Click="UDPSelected"/>
+				<MenuItem Header="ARP" Click="ARPSelected"/>
 			</MenuItem>
 			<!--When Program Start, Add SubMenu(Protocol)-->
 			<MenuItem Header="Stop" Click="MenuStopClick"/>

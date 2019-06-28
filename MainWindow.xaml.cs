@@ -118,6 +118,28 @@ namespace PacketFarmer
 			pm.PacketInterface = new IPPacketInterface(pm.NowCatchingDevice);
 			nowProtocol = "IP";
 		}
+
+		private void UDPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
+		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
+			pm.PacketInterface = new UDPPacketInterface(pm.NowCatchingDevice);
+			nowProtocol = "UDP";
+		}
+
+		private void ARPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
+		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
+			pm.PacketInterface = new ARPPacketInterface(pm.NowCatchingDevice);
+			nowProtocol = "ARP";
+		}
 		private void MenuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
 		{
 			pm.CaptureStop();

@@ -1,8 +1,6 @@
 ﻿using PacketDotNet;
 using SharpPcap;
 using System;
-using System.ComponentModel;
-using System.Reflection;
 using System.Windows;
 
 namespace PacketFarmer //Make Packetcapture function event
@@ -164,12 +162,16 @@ namespace PacketFarmer //Make Packetcapture function event
 					ResultData += "Data\n";
 					int i = 1;
 
-					foreach (byte data in tcpPacket.PayloadData)
+					if(tcpPacket.PayloadData!=null)
 					{
-						ResultData += Convert.ToString(data, 16) + " ";
-						if (i % 8 == 0)
-							ResultData += "\n";
-						i++;
+						foreach (byte data in tcpPacket.PayloadData)
+						{
+							ResultData += Convert.ToString(data, 16) + " ";
+
+							if (i % 8 == 0)
+								ResultData += "\n";
+							i++;
+						}
 					}
 					ResultData += "\n--------------------------------------------\n";
 
@@ -289,7 +291,6 @@ namespace PacketFarmer //Make Packetcapture function event
 				Console.WriteLine(nullException.StackTrace);
 				MessageBox.Show("Can't packet extracted. \n Are you set others protocol in filter?"
 					, "Warining", System.Windows.MessageBoxButton.OK);
-				PacketCaptureDevice.OnPacketArrival -= IpPacketCapture;
 				StopPacketCapture();
 				//PacketCaptureDevice.Close();
 			}
@@ -298,6 +299,195 @@ namespace PacketFarmer //Make Packetcapture function event
 		public override void RemoveHanlder()
 		{
 			PacketCaptureDevice.OnPacketArrival -= IpPacketCapture;
+		}
+	}
+
+	class UDPPacketInterface : PacketInterface
+	{
+		public UDPPacketInterface(ICaptureDevice captureDevice) : base(captureDevice)
+		{ }
+
+		public override void PacketCapture(int captureNum)
+		{
+			this.CaptureNum = captureNum;
+			PacketCaptureDevice.Filter = "udp";
+			ResultData = "";
+			PacketCaptureDevice.OnPacketArrival += UdpPacketCapture;
+			PacketCaptureDevice.StartCapture();
+		}
+
+		public override void PacketCapture(int captureNum, string filter)
+		{
+			this.CaptureNum = captureNum;
+			PacketCaptureDevice.Filter = "udp";
+			ResultData = "";
+			try
+			{
+				SetPacketFillter(filter);
+				PacketCaptureDevice.OnPacketArrival += UdpPacketCapture;
+				PacketCaptureDevice.StartCapture();
+			}
+			catch (PcapException wrongFilter)
+			{
+				Console.WriteLine(wrongFilter.StackTrace);
+				MessageBox.Show("Please reset filter and start.", "Wrong filter!", MessageBoxButton.OK);
+			}
+		}
+		public void UdpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
+		{
+			RawCapture capturePacket = e.Packet;
+
+
+			this.NowCaptureNum++;
+
+			try
+			{
+				if (this.NowCaptureNum <= this.CaptureNum)
+				{
+					var packet = PacketDotNet.Packet.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
+					UdpPacket udpPacket = (UdpPacket)packet.Extract(typeof(PacketDotNet.UdpPacket));
+
+					ResultData += "Source Port:" +udpPacket.SourcePort +" ";
+					ResultData += "Destination Port:" + udpPacket.DestinationPort + "\n";
+					ResultData += "Length:" + udpPacket.Length + " ";
+					ResultData +="CheckSum:" +udpPacket.Checksum +"\n";
+
+					int i = 1;
+
+					if (udpPacket.PayloadData != null)
+					{
+						foreach (byte data in udpPacket.PayloadData)
+						{
+							ResultData += Convert.ToString(data, 16) + " ";
+							if (i % 8 == 0)
+								ResultData += "\n";
+							i++;
+						}
+					}
+					ResultData += "\n--------------------------------------------\n";
+
+					if (this.NowCaptureNum == this.CaptureNum)
+						StopPacketCapture();
+					SendPacketData();
+				}
+
+				else
+				{
+					StopPacketCapture();
+					//PacketCaptureDevice.Close();
+					CaptureEndEvent();
+				}
+			}
+			catch (NullReferenceException nullException)
+			{
+				Console.WriteLine(nullException.StackTrace);
+				MessageBox.Show("Can't packet extracted. \n Are you set others protocol in filter?"
+					, "Warining", System.Windows.MessageBoxButton.OK);
+				StopPacketCapture();
+				//PacketCaptureDevice.Close();
+			}
+		}
+
+		public override void RemoveHanlder()
+		{
+			PacketCaptureDevice.OnPacketArrival -= UdpPacketCapture;
+		}
+	}
+
+	class ARPPacketInterface : PacketInterface
+	{
+		public ARPPacketInterface(ICaptureDevice captureDevice) : base(captureDevice)
+		{ }
+
+		public override void PacketCapture(int captureNum)
+		{
+			this.CaptureNum = captureNum;
+			PacketCaptureDevice.Filter = "arp";
+			ResultData = "";
+			PacketCaptureDevice.OnPacketArrival += ArpPacketCapture;
+			PacketCaptureDevice.StartCapture();
+		}
+
+		public override void PacketCapture(int captureNum, string filter)
+		{
+			this.CaptureNum = captureNum;
+			PacketCaptureDevice.Filter = "arp";
+			ResultData = "";
+			try
+			{
+				SetPacketFillter(filter);
+				PacketCaptureDevice.OnPacketArrival += ArpPacketCapture;
+				PacketCaptureDevice.StartCapture();
+			}
+			catch (PcapException wrongFilter)
+			{
+				Console.WriteLine(wrongFilter.StackTrace);
+				MessageBox.Show("Please reset filter and start.", "Wrong filter!", MessageBoxButton.OK);
+			}
+		}
+		public void ArpPacketCapture(object sender, CaptureEventArgs e) //Packet capture and return to string (async)
+		{
+			RawCapture capturePacket = e.Packet;
+
+
+			this.NowCaptureNum++;
+
+			try
+			{
+				if (this.NowCaptureNum <= this.CaptureNum)
+				{
+					var packet = PacketDotNet.Packet.ParsePacket(capturePacket.LinkLayerType, capturePacket.Data);
+					ARPPacket arpPacket = (ARPPacket)packet.Extract(typeof(PacketDotNet.ARPPacket));
+
+					ResultData += "Hardware Type:" + arpPacket.HardwareAddressType + " ";
+					ResultData += "Protocol TYpe:"+arpPacket.ProtocolAddressType+"\n";
+					ResultData += "Hardware Address Length:" + arpPacket.HardwareAddressLength + " ";
+					ResultData += "Protocol Address Length:" + arpPacket.ProtocolAddressLength + " ";
+					ResultData += "Operation:" + arpPacket.Operation + "\n";
+					ResultData += "Sender Hardware Address" +arpPacket.SenderHardwareAddress +"\n";
+					ResultData += "Sender Protocol Address" + arpPacket.SenderProtocolAddress + "\n";
+					ResultData += "Target Hardware Address" + arpPacket.TargetHardwareAddress + "\n";
+					ResultData += "Target Protocol Address" + arpPacket.TargetProtocolAddress + "\n";
+
+					int i = 1;
+
+					if (arpPacket.PayloadData != null)
+					{
+						foreach (byte data in arpPacket.PayloadData)
+						{
+							ResultData += Convert.ToString(data, 16) + " ";
+							if (i % 8 == 0)
+								ResultData += "\n";
+							i++;
+						}
+					}
+					ResultData += "\n--------------------------------------------\n";
+
+					if (this.NowCaptureNum == this.CaptureNum)
+						StopPacketCapture();
+					SendPacketData();
+				}
+
+				else
+				{
+					StopPacketCapture();
+					//PacketCaptureDevice.Close();
+					CaptureEndEvent();
+				}
+			}
+			catch (NullReferenceException nullException)
+			{
+				Console.WriteLine(nullException.StackTrace);
+				MessageBox.Show("Can't packet extracted. \n Are you set others protocol in filter?"
+					, "Warining", System.Windows.MessageBoxButton.OK);
+				StopPacketCapture();
+				//PacketCaptureDevice.Close();
+			}
+		}
+
+		public override void RemoveHanlder()
+		{
+			PacketCaptureDevice.OnPacketArrival -= ArpPacketCapture;
 		}
 	}
 }
