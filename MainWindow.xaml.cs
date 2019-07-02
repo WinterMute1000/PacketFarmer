@@ -108,15 +108,26 @@ namespace PacketFarmer
 			nowProtocol = "TCP";
 		}
 
-		private void IPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
+		private void IPv4Selected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
 		{
 			if (isStarted)
 			{
 				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
 				return;
 			}
-			pm.PacketInterface = new IPPacketInterface(pm.NowCatchingDevice);
-			nowProtocol = "IP";
+			pm.PacketInterface = new IPv4PacketInterface(pm.NowCatchingDevice);
+			nowProtocol = "IPv4";
+		}
+
+		private void IPv6Selected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
+		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
+			pm.PacketInterface = new IPv6PacketInterface(pm.NowCatchingDevice);
+			nowProtocol = "IPv6";
 		}
 
 		private void UDPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
@@ -139,6 +150,17 @@ namespace PacketFarmer
 			}
 			pm.PacketInterface = new ARPPacketInterface(pm.NowCatchingDevice);
 			nowProtocol = "ARP";
+		}
+
+		private void ICMPSelected(object sender, RoutedEventArgs e) //Select Protocol(Processing Sub Menu)
+		{
+			if (isStarted)
+			{
+				MessageBox.Show("Please end packet capturing!", "Warining", MessageBoxButton.OK);
+				return;
+			}
+			pm.PacketInterface = new ICMPPacketInterface(pm.NowCatchingDevice);
+			nowProtocol = "ICMP";
 		}
 		private void MenuStopClick(object sender, RoutedEventArgs e) //Stop Packet Capturing
 		{

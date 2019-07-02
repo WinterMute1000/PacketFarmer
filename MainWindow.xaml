@@ -26,9 +26,11 @@
 			<MenuItem Header="Save" Click="MenuSaveClick"/>
 			<MenuItem Header="SelectProtocol">
 				<MenuItem Header="TCP" Click="TCPSelected"/>
-				<MenuItem Header="IP" Click="IPSelected"/>
+				<MenuItem Header="IPv4" Click="IPv4Selected"/>
+				<MenuItem Header="IPv6" Click="IPv6Selected"/>
 				<MenuItem Header="UDP" Click="UDPSelected"/>
 				<MenuItem Header="ARP" Click="ARPSelected"/>
+				<MenuItem Header="ICMP" Click="ICMPSelected"/>
 			</MenuItem>
 			<!--When Program Start, Add SubMenu(Protocol)-->
 			<MenuItem Header="Stop" Click="MenuStopClick"/>
